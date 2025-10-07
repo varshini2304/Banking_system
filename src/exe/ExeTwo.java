@@ -1,16 +1,19 @@
 package exe;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import javax.management.RuntimeErrorException;
 
 import bank.Customer;
 import bank.Employee;
 
 public class ExeTwo {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 //		List<Object> list = new ArrayList<Object>();
 //		List<Object> list2 = new ArrayList<Object>();
@@ -42,7 +45,17 @@ public class ExeTwo {
 		list.remove(new Integer(2000));
 		Collections.sort(list);
 		System.out.println("\n"+list);
-
+		
+		System.out.println("Hello again");
+		stupidOne();
+	}
+	private static void stupidOne() throws IOException{
+		try {
+			throw new IOException("cheeerssssss");
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("haiiiiiii");
+		}
 	}
 
 }

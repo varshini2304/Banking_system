@@ -35,6 +35,15 @@ public class Customer extends Person {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	public String getPassword() {
+		return password;
+	}
+	public Account getAccount() {
+		return account;
+	}
+	public void setAccount(Account account) {
+		this.account = account;
+	}
 
 	@Override
 	public String toString() {

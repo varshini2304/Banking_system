@@ -1,38 +1,40 @@
 package bank;
 
+import java.math.BigDecimal;
+
 public class CheckingAccount implements Account{
-	
-	private double balance;
+
+	private BigDecimal balance;
 	private String IFSC;
 	private String accountNumber;
 	private AccountType accountType;
 
-	
+
 	public CheckingAccount() {
 		super();
 	}
 
-	public CheckingAccount(AccountType accountType,double balance) {
+	public CheckingAccount(AccountType accountType,BigDecimal balance) {
 		super();
 		this.accountType=accountType;
 		this.balance=balance;
 		this.accountNumber=generateAccountNumber(accountType);
 	}
-	
-	
-	
+
+
+
 	private String generateAccountNumber(AccountType accountType2) {
 		String local = accountType+""+Math.round(Math.random()*1500000000);
 		return local;
 	}
 
 	@Override
-	public void setBalance(double balance) {
+	public void setBalance(BigDecimal balance) {
 		this.balance=balance;
 	}
 
 	@Override
-	public double getBalance() {
+	public BigDecimal getBalance() {
 		// TODO Auto-generated method stub
 		return this.balance;
 	}
