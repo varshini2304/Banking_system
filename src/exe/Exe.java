@@ -1,7 +1,11 @@
 package exe;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import bank.Account;
 import bank.AccountType;
 import bank.Address;
@@ -30,69 +34,67 @@ public class Exe {
         DataManager dm = new DataManager();
 
         while (true) {
-            System.out.println("\nSelect your role:");
-            System.out.println("1. Admin");
-            System.out.println("2. Manager");
-            System.out.println("3. Employee");
-            System.out.println("4. Customer");
-            System.out.println("5. Exit");
-            System.out.print("Enter choice: ");
-            int choice = sc.nextInt();
-            sc.nextLine(); // Consume newline
+            int choice;
+            String username;
+            String password;
+            synchronized (System.out) {
+                System.out.println("\nSelect your role:");
+                System.out.println("1. Admin");
+                System.out.println("2. Manager");
+                System.out.println("3. Employee");
+                System.out.println("4. Customer");
+                System.out.println("5. Exit");
+                System.out.print("Enter choice: ");
+                choice = sc.nextInt();
+                sc.nextLine(); // Consume newline
 
-            if (choice == 5) {
-                System.out.println("Thank you for using our banking system!");
-                break;
+                if (choice == 5) {
+                    System.out.println("Thank you for using our banking system!");
+                    break;
+                }
+
+                System.out.print("Enter username: ");
+                username = sc.nextLine();
+                System.out.print("Enter password: ");
+                password = sc.nextLine();
             }
 
-            System.out.print("Enter username: ");
-            String username = sc.nextLine();
-            System.out.print("Enter password: ");
-            String password = sc.nextLine();
-
+            Object user = null;
             switch (choice) {
                 case 1: // Admin
-                    Admin admin = dm.authenticateAdmin(username, password);
-                    if (admin != null) {
-                        adminMenu(sc, dm);
-                    } else {
-                        System.out.println("Invalid credentials!");
-                    }
+                    user = dm.authenticateAdmin(username, password);
                     break;
                 case 2: // Manager
-                    Manager manager = dm.authenticateManager(username, password);
-                    if (manager != null) {
-                        managerMenu(sc, dm);
-                    } else {
-                        System.out.println("Invalid credentials!");
-                    }
+                    user = dm.authenticateManager(username, password);
                     break;
                 case 3: // Employee
-                    System.out.print("Enter Employee ID: ");
-                    String empId = sc.nextLine();
-                    Employee employee = dm.authenticateEmployee(empId, password);
-                    if (employee != null) {
-                        employeeMenu(dm, employee, sc);
-                    } else {
-                        System.out.println("Invalid credentials!");
-                    }
+                    user = dm.authenticateEmployee(username, password);
                     break;
                 case 4: // Customer
-                    Customer customer = dm.authenticateCustomer(username, password);
-                    if (customer != null) {
-                        customerMenu(dm, customer, sc);
-                    } else {
-                        System.out.println("Invalid credentials!");
-                    }
+                    user = dm.authenticateCustomer(username, password);
                     break;
                 default:
                     System.out.println("Invalid choice!");
+            }
+
+            if (user != null) {
+                System.out.println("Login successful!");
+                Session session = new Session(dm, user);
+                Thread thread = new Thread(session);
+                thread.start();
+                try {
+                    thread.join(); // Wait for the session thread to complete
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else if (choice >= 1 && choice <= 4) {
+                System.out.println("Invalid credentials!");
             }
         }
         sc.close();
     }
 
-    private static void adminMenu(Scanner sc, DataManager dm) {
+    public static void adminMenu(Scanner sc, DataManager dm) {
         while (true) {
             System.out.println("\nAdmin Menu:");
             System.out.println("1. Create Manager");
@@ -102,7 +104,8 @@ public class Exe {
             int choice = sc.nextInt();
             sc.nextLine();
 
-            if (choice == 3) break;
+            if (choice == 3)
+                break;
 
             switch (choice) {
                 case 1:
@@ -151,7 +154,7 @@ public class Exe {
         }
     }
 
-    private static void managerMenu(Scanner sc, DataManager dm) {
+    public static void managerMenu(Scanner sc, DataManager dm) {
         while (true) {
             System.out.println("\nManager Menu:");
             System.out.println("1. Create Employee");
@@ -163,7 +166,8 @@ public class Exe {
             int choice = sc.nextInt();
             sc.nextLine();
 
-            if (choice == 5) break;
+            if (choice == 5)
+                break;
 
             switch (choice) {
                 case 1:
@@ -205,13 +209,7 @@ public class Exe {
                     }
                     break;
                 case 3:
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("Total Customers: ").append(dm.getCustomers().size()).append("\n");
-                    sb.append("Total Transactions: ").append(dm.getAllTransactions().size()).append("\n");
-                    for (Employee em : dm.getEmployees()) {
-                        sb.append("Employee ").append(em.getEmployeeId()).append(": ").append(em.getWorkLogs().size()).append(" transactions\n");
-                    }
-                    System.out.println(sb.toString());
+                    viewReportsMenu(sc, dm);
                     break;
                 case 4:
                     for (Approval a : dm.getApprovalQueue()) {
@@ -235,7 +233,7 @@ public class Exe {
         }
     }
 
-    private static void employeeMenu(DataManager dm, Employee employee, Scanner sc) {
+    public static void employeeMenu(DataManager dm, Employee employee, Scanner sc) {
         // This menu remains largely the same as it already used DataManager directly
         while (true) {
             System.out.println("\nEmployee Menu:");
@@ -249,7 +247,8 @@ public class Exe {
             int choice = sc.nextInt();
             sc.nextLine();
 
-            if (choice == 6) break;
+            if (choice == 6)
+                break;
 
             switch (choice) {
                 case 1:
@@ -290,16 +289,22 @@ public class Exe {
                     int atype = sc.nextInt();
                     sc.nextLine();
                     AccountType at;
-                    if (atype == 1) at = AccountType.SB;
-                    else if (atype == 2) at = AccountType.CHK;
-                    else at = AccountType.CUR;
+                    if (atype == 1)
+                        at = AccountType.SB;
+                    else if (atype == 2)
+                        at = AccountType.CHK;
+                    else
+                        at = AccountType.CUR;
                     System.out.print("Initial Balance: ");
                     double bal = sc.nextDouble();
                     sc.nextLine();
                     Account acc;
-                    if (at == AccountType.SB) acc = new SavingsAccount(at, BigDecimal.valueOf(bal));
-                    else if (at == AccountType.CHK) acc = new CheckingAccount(at, BigDecimal.valueOf(bal));
-                    else acc = new CurrentAccount(at, BigDecimal.valueOf(bal));
+                    if (at == AccountType.SB)
+                        acc = new SavingsAccount(at, BigDecimal.valueOf(bal));
+                    else if (at == AccountType.CHK)
+                        acc = new CheckingAccount(at, BigDecimal.valueOf(bal));
+                    else
+                        acc = new CurrentAccount(at, BigDecimal.valueOf(bal));
                     c.setAccount(acc);
                     dm.addCustomer(c);
                     System.out.println("Customer created! Account Number: " + acc.getAccountNumber());
@@ -352,7 +357,7 @@ public class Exe {
         }
     }
 
-    private static void customerMenu(DataManager dm, Customer customer, Scanner sc) {
+    public static void customerMenu(DataManager dm, Customer customer, Scanner sc) {
         while (true) {
             System.out.println("\nCustomer Menu:");
             System.out.println("1. Check Balance");
@@ -363,7 +368,8 @@ public class Exe {
             int choice = sc.nextInt();
             sc.nextLine();
 
-            if (choice == 4) break;
+            if (choice == 4)
+                break;
 
             switch (choice) {
                 case 1:
@@ -392,21 +398,16 @@ public class Exe {
                     sc.nextLine();
 
                     if (BigDecimal.valueOf(amt2).compareTo(BigDecimal.valueOf(50000)) > 0) {
-                        Transaction t2 = new Transaction("withdraw", BigDecimal.valueOf(amt2), customer.getAccount().getAccountNumber(), "self", customer.getUsername());
+                        Transaction t2 = new Transaction("withdraw", BigDecimal.valueOf(amt2),
+                                customer.getAccount().getAccountNumber(), "self", customer.getUsername());
                         Approval a = new Approval(t2);
                         dm.addApproval(a);
                         System.out.println("Withdrawal amount > 50000. Submitted for manager approval.");
-                        
-                        managerApprovalPrompt(dm, sc, a);
 
-                        if (a.getStatus().equals("approved")) {
-                            System.out.println("Withdrawal approved!");
-                        } else {
-                            System.out.println("Withdrawal rejected by manager.");
-                        }
                     } else {
                         try {
-                            dm.performWithdraw(customer.getAccount().getAccountNumber(), BigDecimal.valueOf(amt2), "self");
+                            dm.performWithdraw(customer.getAccount().getAccountNumber(), BigDecimal.valueOf(amt2),
+                                    "self");
                             System.out.println("Withdrawn!");
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
@@ -419,30 +420,181 @@ public class Exe {
         }
     }
 
-    private static void managerApprovalPrompt(DataManager dm, Scanner sc, Approval approval) {
-        System.out.println("\n--- Manager Approval Required ---");
-        Manager manager = null;
-        while (manager == null) {
-            System.out.print("Enter manager username: ");
-            String username = sc.nextLine();
-            System.out.print("Enter manager password: ");
-            String password = sc.nextLine();
-            manager = dm.authenticateManager(username, password);
-            if (manager == null) {
-                System.out.println("Invalid manager credentials! Please try again.");
+    private static void displayFullDashboard(DataManager dm) {
+        List<Transaction> transactions = dm.getAllTransactions();
+        List<Employee> employees = dm.getEmployees();
+        List<Customer> customers = dm.getCustomers();
+        List<Approval> approvals = dm.getApprovalQueue().stream().filter(a -> a.getStatus().equals("pending"))
+                .collect(Collectors.toList());
+
+        // Calculate summary
+        int totalDeposits = 0;
+        int totalWithdrawals = 0;
+        double totalDepositAmount = 0;
+        double totalWithdrawAmount = 0;
+        for (Transaction t : transactions) {
+            if (t.getType().equals("deposit")) {
+                totalDeposits++;
+                totalDepositAmount += t.getAmount().doubleValue();
+            } else if (t.getType().equals("withdraw")) {
+                totalWithdrawals++;
+                totalWithdrawAmount += t.getAmount().doubleValue();
             }
         }
+        int pendingApprovals = approvals.size();
 
-        System.out.println("\nPending Approval:");
-        System.out.println(approval);
-        System.out.print("Approve? (y/n): ");
-        String choice = sc.nextLine();
+        // ANSI colors
+        String blue = "\u001B[34m";
+        String reset = "\u001B[0m";
 
-        if (choice.equalsIgnoreCase("y")) {
-            dm.approveTransaction(approval, manager.getUsername());
-        } else {
-            dm.rejectTransaction(approval, manager.getUsername());
+        System.out.println("================= MANAGER DASHBOARD =================" + reset);
+        System.out.println("Total Employees: " + employees.size());
+        System.out.println("Total Customers: " + customers.size());
+        System.out.println("Total Transactions: " + transactions.size());
+        System.out.println("-----------------------------------------------------");
+        System.out.println("Transaction Summary:");
+        System.out.printf("  → Deposits: %d  (₹%,.0f)\n", totalDeposits, totalDepositAmount);
+        System.out.printf("  → Withdrawals: %d  (₹%,.0f)\n", totalWithdrawals, totalWithdrawAmount);
+        System.out.printf("  → Pending Approvals: %d  (> ₹50,000)\n", pendingApprovals);
+        System.out.println("-----------------------------------------------------");
+
+        // Employee performance
+        System.out.println("Employee Performance:");
+        System.out.println("Employee ID   | Transactions | Customers | Total Amount");
+        System.out.println("--------------------------------------------------------");
+        for (Employee emp : employees) {
+            int transCount = emp.getWorkLogs().size();
+            // Customers handled: assume unique customers from transactions
+            long custCount = emp.getWorkLogs().stream().map(Transaction::getCustomerId).distinct().count();
+            double totalAmt = emp.getWorkLogs().stream().mapToDouble(t -> t.getAmount().doubleValue()).sum();
+            System.out.printf("%-12s | %-12d | %-9d | ₹%,.0f\n", emp.getEmployeeId(), transCount, custCount, totalAmt);
         }
-        System.out.println("--- Manager action complete ---");
+        System.out.println("--------------------------------------------------------");
+
+        // Highest and lowest performing
+        Employee highest = employees.stream()
+                .max((e1, e2) -> Integer.compare(e1.getWorkLogs().size(), e2.getWorkLogs().size())).orElse(null);
+        Employee lowest = employees.stream()
+                .min((e1, e2) -> Integer.compare(e1.getWorkLogs().size(), e2.getWorkLogs().size())).orElse(null);
+        if (highest != null) {
+            System.out.println("Highest Performing Employee: " + highest.getEmployeeId() + " ("
+                    + highest.getWorkLogs().size() + " transactions)");
+        }
+        if (lowest != null) {
+            System.out.println("Least Active Employee: " + lowest.getEmployeeId() + " (" + lowest.getWorkLogs().size()
+                    + " transactions)");
+        }
+        System.out.println("=====================================================");
+
+        // Pending Approvals
+        if (!approvals.isEmpty()) {
+            System.out.println("\nPending Approvals:");
+            System.out.println("--------------------------------------------------------");
+            System.out.println("Account No     | Employee ID | Amount      | DateTime");
+            for (Approval a : approvals) {
+                Transaction t = a.getTransaction();
+                System.out.printf("%-14s | %-11s | ₹%,-9.0f | %s\n", t.getAccountNumber(), t.getEmployeeId(),
+                        t.getAmount().doubleValue(),
+                        t.getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+            }
+            System.out.println("--------------------------------------------------------");
+        }
+
+        // Employee Activity Logs (recent, say last 5 per employee)
+        System.out.println("\nEmployee Activity Logs:");
+        for (Employee emp : employees) {
+            System.out.println("Employee " + emp.getEmployeeId() + " Recent Activities:");
+            List<Transaction> logs = emp.getWorkLogs().stream()
+                    .sorted((t1, t2) -> t2.getDateTime().compareTo(t1.getDateTime())).limit(5)
+                    .collect(Collectors.toList());
+            for (Transaction t : logs) {
+                String action = t.getType().equals("deposit") ? "Deposited" : "Withdrew";
+                System.out.println("- " + action + " ₹" + t.getAmount() + " to " + t.getAccountNumber() + " on "
+                        + t.getDateTime().toLocalDate());
+            }
+            if (logs.isEmpty()) {
+                System.out.println("- No recent activities");
+            }
+        }
     }
+
+    private static void displayDateReport(DataManager dm, LocalDate start, LocalDate end) {
+        List<Transaction> filtered = dm.getAllTransactions().stream()
+                .filter(t -> !t.getDateTime().toLocalDate().isBefore(start)
+                        && !t.getDateTime().toLocalDate().isAfter(end))
+                .collect(Collectors.toList());
+
+        System.out.println("Report from " + start + " to " + end);
+        System.out.println("Total Transactions: " + filtered.size());
+
+        int deposits = 0, withdrawals = 0;
+        double depAmt = 0, withAmt = 0;
+        for (Transaction t : filtered) {
+            if (t.getType().equals("deposit")) {
+                deposits++;
+                depAmt += t.getAmount().doubleValue();
+            } else {
+                withdrawals++;
+                withAmt += t.getAmount().doubleValue();
+            }
+        }
+        System.out.printf("Deposits: %d (₹%,.0f)\n", deposits, depAmt);
+        System.out.printf("Withdrawals: %d (₹%,.0f)\n", withdrawals, withAmt);
+
+        // Employee performance in date range
+        System.out.println("\nEmployee Performance in Date Range:");
+        System.out.println("Employee ID   | Transactions | Total Amount");
+        System.out.println("--------------------------------------------");
+        for (Employee emp : dm.getEmployees()) {
+            List<Transaction> empTrans = emp.getWorkLogs().stream()
+                    .filter(t -> !t.getDateTime().toLocalDate().isBefore(start)
+                            && !t.getDateTime().toLocalDate().isAfter(end))
+                    .collect(Collectors.toList());
+            int count = empTrans.size();
+            double amt = empTrans.stream().mapToDouble(t -> t.getAmount().doubleValue()).sum();
+            System.out.printf("%-12s | %-12d | ₹%,.0f\n", emp.getEmployeeId(), count, amt);
+        }
+        System.out.println("--------------------------------------------");
+    }
+
+    private static void viewReportsMenu(Scanner sc, DataManager dm) {
+        while (true) {
+            System.out.println("\nView Reports:");
+            System.out.println("1. Full Dashboard");
+            System.out.println("2. Today’s Report");
+            System.out.println("3. Last 7 Days");
+            System.out.println("4. Custom Date Range");
+            System.out.println("5. Back to Manager Menu");
+            System.out.print("Enter choice: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            if (choice == 5)
+                break;
+
+            switch (choice) {
+                case 1:
+                    displayFullDashboard(dm);
+                    break;
+                case 2:
+                    displayDateReport(dm, LocalDate.now(), LocalDate.now());
+                    break;
+                case 3:
+                    displayDateReport(dm, LocalDate.now().minusDays(7), LocalDate.now());
+                    break;
+                case 4:
+                    System.out.print("Start Date (yyyy-MM-dd): ");
+                    String start = sc.nextLine();
+                    System.out.print("End Date (yyyy-MM-dd): ");
+                    String end = sc.nextLine();
+                    LocalDate startDate = LocalDate.parse(start);
+                    LocalDate endDate = LocalDate.parse(end);
+                    displayDateReport(dm, startDate, endDate);
+                    break;
+                default:
+                    System.out.println("Invalid choice!");
+            }
+        }
+    }
+
 }

@@ -64,7 +64,8 @@ public class DataManager {
             Account acc = new SavingsAccount(AccountType.SB, BigDecimal.valueOf(1000 + i * 100));
             cus.setAccount(acc);
             customers.add(cus);
-            System.out.println("Added customer " + i + " username: " + cus.getUsername() + " password: " + cus.getPassword());
+            System.out.println(
+                    "Added customer " + i + " username: " + cus.getUsername() + " password: " + cus.getPassword());
         }
     }
 
@@ -87,9 +88,9 @@ public class DataManager {
         return null;
     }
 
-    public Employee authenticateEmployee(String employeeId, String password) {
+    public Employee authenticateEmployee(String username, String password) {
         for (Employee e : employees) {
-            if (e.getEmployeeId().equals(employeeId) && e.getPassword().equals(password)) {
+            if (e.getUserName().equals(username) && e.getPassword().equals(password)) {
                 return e;
             }
         }
@@ -192,8 +193,27 @@ public class DataManager {
             Transaction t = new Transaction("withdraw", amount, accountNumber, employeeId, c.getUsername());
             Approval a = new Approval(t);
             addApproval(a);
-            throw new InsufficientBalanceException(
-                    "Transaction >50k requires manager approval. Submitted for approval.");
+            System.out.println("Transaction >50k requires manager approval. Submitted for approval. Waiting...");
+            try {
+                a.waitForApproval();
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            if (a.getStatus().equals("approved")) {
+                System.out.println("Withdrawal approved!");
+                c.getAccount().setBalance(c.getAccount().getBalance().subtract(amount));
+                Transaction transaction = a.getTransaction();
+                addTransaction(transaction);
+                Employee emp = findEmployeeById(employeeId);
+                if (emp != null) {
+                    emp.getWorkLogs().add(transaction);
+                }
+            } else {
+                System.out.println("Withdrawal rejected.");
+            }
+            return;
         }
         c.getAccount().setBalance(c.getAccount().getBalance().subtract(amount));
         Transaction t = new Transaction("withdraw", amount, accountNumber, employeeId, c.getUsername());
@@ -208,11 +228,8 @@ public class DataManager {
     public void approveTransaction(Approval a, String managerUsername) {
         a.setStatus("approved");
         a.setManagerUsername(managerUsername);
-        // Perform the transaction
+        addTransaction(a.getTransaction());
         try {
-            Customer c = findCustomerByAccountNumber(a.getTransaction().getAccountNumber());
-            c.getAccount().setBalance(c.getAccount().getBalance().subtract(a.getTransaction().getAmount()));
-            addTransaction(a.getTransaction());
             Employee e = findEmployeeById(a.getTransaction().getEmployeeId());
             if (e != null) {
                 e.getWorkLogs().add(a.getTransaction());
@@ -220,11 +237,13 @@ public class DataManager {
         } catch (Exception ex) {
             // Handle
         }
+        a.signalApproval();
     }
 
     public void rejectTransaction(Approval a, String managerUsername) {
         a.setStatus("rejected");
         a.setManagerUsername(managerUsername);
+        a.signalApproval();
     }
 
     // Generate employee ID
