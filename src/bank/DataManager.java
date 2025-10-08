@@ -57,12 +57,14 @@ public class DataManager {
             Address addr = new Address(100 + i, "Street" + i, "City" + i, "State" + i, "Country", "12345" + i);
             Customer cus = new Customer(20 + i, "Customer" + i, "Last" + i, addr, "cus" + i + "@bank.com",
                     1234567890L + i);
-            cus.setUsername("cus" + i);
-            cus.setPassword("pass" + i);
+            cus.setCustomerId(String.valueOf(i));
+            cus.setUsername(String.valueOf(i));
+            cus.setPassword("pass");
             // Assign account, say Savings
             Account acc = new SavingsAccount(AccountType.SB, BigDecimal.valueOf(1000 + i * 100));
             cus.setAccount(acc);
             customers.add(cus);
+            System.out.println("Added customer " + i + " username: " + cus.getUsername() + " password: " + cus.getPassword());
         }
     }
 

@@ -2,6 +2,7 @@ package bank;
 
 public class Customer extends Person {
 
+	private String customerId;
 	private String username;
 	private String password;
 	private boolean priviliged;
@@ -37,6 +38,12 @@ public class Customer extends Person {
 	}
 	public String getPassword() {
 		return password;
+	}
+	public String getCustomerId() {
+		return customerId;
+	}
+	public void setCustomerId(String customerId) {
+		this.customerId = customerId;
 	}
 	public Account getAccount() {
 		return account;

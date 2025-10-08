@@ -3,12 +3,11 @@ package bank;
 public class Approval {
     private Transaction transaction;
     private String status; // pending, approved, rejected
-    private String managerUsername; // who approved/rejected
+    private String managerUsername;
 
     public Approval(Transaction transaction) {
         this.transaction = transaction;
         this.status = "pending";
-        this.managerUsername = null;
     }
 
     public Transaction getTransaction() { return transaction; }

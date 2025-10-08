@@ -9,7 +9,7 @@ public class Employee extends Person {
 	private String userName;
 	private String password;
 	private String employeeId;
-	private List<Transaction> workLogs;
+	private java.util.List<Transaction> workLogs;
 
 
 	public String getUserName() {
