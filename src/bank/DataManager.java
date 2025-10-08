@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Scanner;
 import java.util.Set;
 
 import exceptions.AccountNotFoundException;
@@ -212,6 +213,51 @@ public class DataManager {
                 }
             } else {
                 System.out.println("Withdrawal rejected.");
+            }
+            return;
+        }
+        c.getAccount().setBalance(c.getAccount().getBalance().subtract(amount));
+        Transaction t = new Transaction("withdraw", amount, accountNumber, employeeId, c.getUsername());
+        addTransaction(t);
+        Employee e = findEmployeeById(employeeId);
+        if (e != null) {
+            e.getWorkLogs().add(t);
+        }
+    }
+
+    public void performWithdraw(String accountNumber, BigDecimal amount, String employeeId, DataManager dm, Scanner sc)
+            throws AccountNotFoundException, InsufficientBalanceException {
+        Customer c = findCustomerByAccountNumber(accountNumber);
+        if (c.getAccount().getBalance().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException("Insufficient balance for withdrawal");
+        }
+        if (amount.compareTo(BigDecimal.valueOf(50000)) > 0) {
+            System.out.println("Transaction >50k requires manager approval.");
+            System.out.print("Enter manager username: ");
+            String managerUsername = sc.nextLine();
+            System.out.print("Enter manager password: ");
+            String managerPassword = sc.nextLine();
+
+            Manager manager = dm.authenticateManager(managerUsername, managerPassword);
+            if (manager != null) {
+                System.out.println("Manager login successful!");
+                System.out.print("Approve transaction? (y/n): ");
+                String choice = sc.nextLine();
+                if (choice.equalsIgnoreCase("y")) {
+                    c.getAccount().setBalance(c.getAccount().getBalance().subtract(amount));
+                    Transaction t = new Transaction("withdraw", amount, accountNumber, employeeId, c.getUsername());
+                    addTransaction(t);
+                    Employee e = findEmployeeById(employeeId);
+                    if (e != null) {
+                        e.getWorkLogs().add(t);
+                    }
+                    System.out.println("Withdrawal approved!");
+                    System.out.println("Remaining balance: " + c.getAccount().getBalance());
+                } else {
+                    System.out.println("Withdrawal rejected by manager.");
+                }
+            } else {
+                System.out.println("Invalid manager credentials. Withdrawal rejected.");
             }
             return;
         }

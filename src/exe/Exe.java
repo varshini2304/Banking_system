@@ -329,8 +329,7 @@ public class Exe {
                     double amt2 = sc.nextDouble();
                     sc.nextLine();
                     try {
-                        dm.performWithdraw(accNo2, BigDecimal.valueOf(amt2), employee.getEmployeeId());
-                        System.out.println("Withdrawn!");
+                        dm.performWithdraw(accNo2, BigDecimal.valueOf(amt2), employee.getEmployeeId(), dm, sc);
                     } catch (Exception ex) {
                         System.out.println(ex.getMessage());
                     }
@@ -467,7 +466,7 @@ public class Exe {
             // Customers handled: assume unique customers from transactions
             long custCount = emp.getWorkLogs().stream().map(Transaction::getCustomerId).distinct().count();
             double totalAmt = emp.getWorkLogs().stream().mapToDouble(t -> t.getAmount().doubleValue()).sum();
-            System.out.printf("%-12s | %-12d | %-9d | ₹%,.0f\n", emp.getEmployeeId(), transCount, custCount, totalAmt);
+            System.out.printf("% -12s | %-12d | %-9d | ₹%,.0f\n", emp.getEmployeeId(), transCount, custCount, totalAmt);
         }
         System.out.println("--------------------------------------------------------");
 
@@ -477,7 +476,7 @@ public class Exe {
         Employee lowest = employees.stream()
                 .min((e1, e2) -> Integer.compare(e1.getWorkLogs().size(), e2.getWorkLogs().size())).orElse(null);
         if (highest != null) {
-            System.out.println("Highest Performing Employee: " + highest.getEmployeeId() + " ("
+            System.out.println("Highest Performing Employee: " + highest.getEmployeeId() + " (" 
                     + highest.getWorkLogs().size() + " transactions)");
         }
         if (lowest != null) {
@@ -493,9 +492,9 @@ public class Exe {
             System.out.println("Account No     | Employee ID | Amount      | DateTime");
             for (Approval a : approvals) {
                 Transaction t = a.getTransaction();
-                System.out.printf("%-14s | %-11s | ₹%,-9.0f | %s\n", t.getAccountNumber(), t.getEmployeeId(),
+                System.out.printf("% -14s | %-11s | ₹%,-9.0f | %s\n", t.getAccountNumber(), t.getEmployeeId(),
                         t.getAmount().doubleValue(),
-                        t.getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+                        t.getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))); 
             }
             System.out.println("--------------------------------------------------------");
         }
@@ -552,7 +551,7 @@ public class Exe {
                     .collect(Collectors.toList());
             int count = empTrans.size();
             double amt = empTrans.stream().mapToDouble(t -> t.getAmount().doubleValue()).sum();
-            System.out.printf("%-12s | %-12d | ₹%,.0f\n", emp.getEmployeeId(), count, amt);
+            System.out.printf("% -12s | %-12d | ₹%,.0f\n", emp.getEmployeeId(), count, amt);
         }
         System.out.println("--------------------------------------------");
     }
