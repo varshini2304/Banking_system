@@ -1,7 +1,6 @@
 package exe;
 
 import java.util.Scanner;
-
 import bank.Admin;
 import bank.Customer;
 import bank.DataManager;
@@ -13,10 +12,10 @@ public class Session implements Runnable {
     private Object user;
     private Scanner sc;
 
-    public Session(DataManager dm, Object user) {
+    public Session(DataManager dm, Object user, Scanner sc) { // ✅ reuse existing scanner
         this.dm = dm;
         this.user = user;
-        this.sc = new Scanner(System.in);
+        this.sc = sc;
     }
 
     @Override
@@ -30,6 +29,6 @@ public class Session implements Runnable {
         } else if (user instanceof Customer) {
             Exe.customerMenu(dm, (Customer) user, sc);
         }
-        sc.close();
+        // ⚠️ Do NOT close sc here — main() will close it once at program end
     }
 }

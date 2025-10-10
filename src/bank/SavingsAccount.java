@@ -1,77 +1,72 @@
 package bank;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class SavingsAccount implements Account {
 
-	private BigDecimal balance;
-	private String IFSC;
-	private String accountNumber;
-	private AccountType accountType;
+    private BigDecimal balance;
+    private String IFSC;
+    private String accountNumber;
+    private AccountType accountType;
 
+    public SavingsAccount() {
+        this.balance = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+    }
 
-	public SavingsAccount() {
-		super();
-	}
+    public SavingsAccount(AccountType accountType, BigDecimal balance) {
+        this.accountType = accountType;
+        this.balance = balance.setScale(2, RoundingMode.HALF_UP);
+        this.accountNumber = generateAccountNumber(accountType);
+    }
 
-	public SavingsAccount(AccountType accountType,BigDecimal balance) {
-		super();
-		this.accountType=accountType;
-		this.balance=balance;
-		this.accountNumber=generateAccountNumber(accountType);
-	}
+    private String generateAccountNumber(AccountType type) {
+        return type + "" + Math.round(Math.random() * 1_500_000_000L);
+    }
 
+    @Override
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance.setScale(2, RoundingMode.HALF_UP);
+    }
 
+    @Override
+    public BigDecimal getBalance() {
+        return balance;
+    }
 
-	private String generateAccountNumber(AccountType accountType2) {
-		String local = accountType+""+Math.round(Math.random()*1500000000);
-		return local;
-	}
+    @Override
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
+    }
 
-	@Override
-	public void setBalance(BigDecimal balance) {
-		this.balance=balance;
-	}
+    @Override
+    public AccountType getAccountType() {
+        return accountType;
+    }
 
-	@Override
-	public BigDecimal getBalance() {
-		// TODO Auto-generated method stub
-		return this.balance;
-	}
+    @Override
+    public String getAccountNumber() {
+        return accountNumber;
+    }
 
-	@Override
-	public void setAccountType(AccountType accountType) {
-		this.accountType=accountType;
-	}
+    @Override
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
 
-	@Override
-	public AccountType getAccountType() {
-		// TODO Auto-generated method stub
-		return this.accountType;
-	}
+    @Override
+    public void setIFSC(String IFSC) {
+        this.IFSC = IFSC;
+    }
 
-	@Override
-	public String getAccountNumber() {
-		// TODO Auto-generated method stub
-		return accountNumber;
-	}
+    @Override
+    public String getIFSC() {
+        return IFSC;
+    }
 
-//	@Override
-//	public void setAccountNumber(String accountNumber) {
-//
-//		this.accountNumber=accountNumber;
-//	}
-
-	@Override
-	public void setIFSC(String ifsc) {
-		this.IFSC=ifsc;
-
-	}
-
-	@Override
-	public String getIFSC() {
-		// TODO Auto-generated method stub
-		return this.IFSC;
-	}
-
+    @Override
+    public String toString() {
+        return String.format("[AccountNumber:%s, Type:%s, Balance:₹%s, IFSC:%s]",
+                accountNumber, accountType, balance, IFSC);
+    }
 }

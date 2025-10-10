@@ -4,32 +4,32 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Transaction {
-    private String type; // deposit, withdraw
+    private String type;
     private BigDecimal amount;
-    private LocalDateTime dateTime;
     private String accountNumber;
-    private String employeeId; // who performed the transaction
-    private String customerId; // or customer username
+    private String employeeId;
+    private String customerUsername;
+    private LocalDateTime dateTime;
 
-    public Transaction(String type, BigDecimal amount, String accountNumber, String employeeId, String customerId) {
+    public Transaction(String type, BigDecimal amount, String accountNumber, String employeeId, String customerUsername) {
         this.type = type;
         this.amount = amount;
-        this.dateTime = LocalDateTime.now();
         this.accountNumber = accountNumber;
         this.employeeId = employeeId;
-        this.customerId = customerId;
+        this.customerUsername = customerUsername;
+        this.dateTime = LocalDateTime.now();
     }
 
-    // Getters
     public String getType() { return type; }
     public BigDecimal getAmount() { return amount; }
-    public LocalDateTime getDateTime() { return dateTime; }
     public String getAccountNumber() { return accountNumber; }
     public String getEmployeeId() { return employeeId; }
-    public String getCustomerId() { return customerId; }
+    public String getCustomerUsername() { return customerUsername; }
+    public LocalDateTime getDateTime() { return dateTime; }
 
     @Override
     public String toString() {
-        return "Transaction [type=" + type + ", amount=" + amount + ", dateTime=" + dateTime + ", accountNumber=" + accountNumber + ", employeeId=" + employeeId + ", customerId=" + customerId + "]";
+        return String.format("Transaction[%s, ₹%s, Account:%s, By:%s, Date:%s]",
+                type, amount, accountNumber, employeeId, dateTime);
     }
 }

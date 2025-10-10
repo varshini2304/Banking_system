@@ -16,18 +16,18 @@ public class Approval {
     public String getManagerUsername() { return managerUsername; }
     public void setManagerUsername(String managerUsername) { this.managerUsername = managerUsername; }
 
-    public synchronized void waitForApproval() throws InterruptedException {
-        while (status.equals("pending")) {
-            wait();
-        }
-    }
-
-    public synchronized void signalApproval() {
-        notifyAll();
+    // Optional placeholder for future notifications
+    public void signalApproval() {
+        // Could be logging, sending notification, etc.
+        System.out.println("Approval processed for transaction: " + transaction.getAccountNumber());
     }
 
     @Override
     public String toString() {
-        return "Approval [transaction=" + transaction + ", status=" + status + ", managerUsername=" + managerUsername + "]";
+        return "Approval{" +
+                "transaction=" + transaction +
+                ", status='" + status + '\'' +
+                ", managerUsername='" + managerUsername + '\'' +
+                '}';
     }
 }
